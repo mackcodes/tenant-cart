@@ -1,54 +1,67 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 const AuthContext = createContext(null);
-const TOKEN_KEY = 'tenantcart_token';
 
-function decodeToken(token) {
-  if (!token) return null;
-  try {
-    return jwtDecode(token);
-  } catch {
-    return null;
-  }
-}
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem("tc_user");
 
-export function AuthProvider({ children }) {
-  const [token, setTokenState] = useState(() => localStorage.getItem(TOKEN_KEY));
-  const [user, setUser] = useState(() => decodeToken(localStorage.getItem(TOKEN_KEY)));
+    try {
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch (error) {
+      localStorage.removeItem("tc_user");
+      return null;
+    }
+  });
+
+  const [token, setToken] = useState(
+    () => localStorage.getItem("tc_token") || null
+  );
 
   useEffect(() => {
     if (token) {
-      localStorage.setItem(TOKEN_KEY, token);
-      setUser(decodeToken(token));
+      localStorage.setItem("tc_token", token);
     } else {
-      localStorage.removeItem(TOKEN_KEY);
-      setUser(null);
+      localStorage.removeItem("tc_token");
     }
   }, [token]);
 
-  function setToken(newToken) {
-    setTokenState(newToken);
-  }
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem("tc_user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("tc_user");
+    }
+  }, [user]);
 
-  function logout() {
-    setTokenState(null);
-  }
-
-  const value = {
-    token,
-    user,
-    isAuthenticated: !!token,
-    hasStore: !!user?.tenantId,
-    setToken,
-    logout,
+  const login = (userData, jwt) => {
+    setUser(userData);
+    setToken(jwt);
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+  };
 
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
-}
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        login,
+        logout,
+        isAuthenticated: Boolean(token),
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);
