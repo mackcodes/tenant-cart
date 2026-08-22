@@ -1,46 +1,230 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { registerAccount } from "../services/authService.js";
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+
+import {
+  registerAccount,
+} from "../services/authService.js";
+
 import { useAuth } from "../context/AuthContext.js";
 
+import "./Auth.css";
+
 function RegisterAccount() {
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (event) => {
+    const { name, value } = event.target;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+    setForm((previousForm) => ({
+      ...previousForm,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
     setError("");
+
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+
     try {
       const data = await registerAccount(form);
+
       login(data.user, data.token);
-      navigate("/register-store");
-    } catch (err) {
-      setError(err.message);
+
+      navigate("/register-store", {
+        replace: true,
+      });
+    } catch (error) {
+      setError(
+        error.message || "Unable to create account"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md w-full max-w-md space-y-4">
-        <h1 className="text-2xl font-bold text-gray-800">Create your account</h1>
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-        <input name="name" placeholder="Name" value={form.name} onChange={handleChange}
-          className="w-full border rounded px-3 py-2" required />
-        <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange}
-          className="w-full border rounded px-3 py-2" required />
-        <input name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange}
-          className="w-full border rounded px-3 py-2" required />
-        <input name="confirmPassword" type="password" placeholder="Confirm Password" value={form.confirmPassword} onChange={handleChange}
-          className="w-full border rounded px-3 py-2" required />
-        <button type="submit" className="w-full bg-indigo-600 text-white rounded py-2 hover:bg-indigo-700">
-          Continue
-        </button>
-      </form>
-    </div>
+    <main className="auth-page">
+      <Link to="/" className="auth-brand">
+        Tenant<span>Cart</span>
+      </Link>
+
+      <div className="auth-shell">
+        <section className="auth-introduction">
+          <p className="auth-eyebrow">
+            A good place to begin
+          </p>
+
+          <h1>
+            Make room for
+            <br />
+            <em>your ideas.</em>
+          </h1>
+
+          <p>
+            Create your account first. We will help you set up your store in
+            the next step.
+          </p>
+
+          <div className="auth-progress">
+            <div className="progress-step progress-step-active">
+              <span>01</span>
+
+              <div>
+                <strong>Create an account</strong>
+                <small>Tell us who you are</small>
+              </div>
+            </div>
+
+            <div className="progress-line" />
+
+            <div className="progress-step">
+              <span>02</span>
+
+              <div>
+                <strong>Set up your store</strong>
+                <small>Give your shop a name</small>
+              </div>
+            </div>
+
+            <div className="progress-line" />
+
+            <div className="progress-step">
+              <span>03</span>
+
+              <div>
+                <strong>Start selling</strong>
+                <small>Add your first products</small>
+              </div>
+            </div>
+          </div>
+
+          <div className="auth-note">
+            <strong>Your store starts here</strong>
+            A name, a point of view, and the things you want to share with the
+            world.
+          </div>
+        </section>
+
+        <section className="auth-panel">
+          <div className="auth-panel-header">
+            <h2>Create an account</h2>
+            <p>
+              Step one of two — tell us a little about yourself.
+            </p>
+          </div>
+
+          <form
+            onSubmit={handleSubmit}
+            className="auth-form"
+          >
+            {error && (
+              <p className="auth-error">
+                {error}
+              </p>
+            )}
+
+            <label className="auth-field">
+              <span>Your name</span>
+
+              <input
+                name="name"
+                type="text"
+                value={form.name}
+                onChange={handleChange}
+                className="auth-input"
+                placeholder="Mayank Kumar"
+                autoComplete="name"
+                required
+              />
+            </label>
+
+            <label className="auth-field">
+              <span>Email address</span>
+
+              <input
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                className="auth-input"
+                placeholder="you@example.com"
+                autoComplete="email"
+                required
+              />
+            </label>
+
+            <label className="auth-field">
+              <span>Password</span>
+
+              <input
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={handleChange}
+                className="auth-input"
+                placeholder="At least 6 characters"
+                autoComplete="new-password"
+                minLength="6"
+                required
+              />
+            </label>
+
+            <label className="auth-field">
+              <span>Confirm password</span>
+
+              <input
+                name="confirmPassword"
+                type="password"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                className="auth-input"
+                placeholder="Repeat your password"
+                autoComplete="new-password"
+                minLength="6"
+                required
+              />
+            </label>
+
+            <button
+              type="submit"
+              className="auth-submit"
+              disabled={loading}
+            >
+              {loading
+                ? "Creating account..."
+                : "Continue to store setup"}
+            </button>
+          </form>
+
+          <p className="auth-footer">
+            Already have an account?{" "}
+            <Link to="/login">Log in</Link>
+          </p>
+        </section>
+      </div>
+    </main>
   );
 }
 

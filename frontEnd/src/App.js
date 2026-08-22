@@ -1,12 +1,15 @@
 import React from "react";
 import {
   BrowserRouter,
-  Routes,
-  Route,
   Navigate,
+  Route,
+  Routes,
 } from "react-router-dom";
 
-import { AuthProvider, useAuth } from "./context/AuthContext.js";
+import {
+  AuthProvider,
+  useAuth,
+} from "./context/AuthContext.js";
 
 import LandingPage from "./pages/LandingPage.js";
 import Login from "./pages/Login.js";
@@ -15,29 +18,83 @@ import RegisterStore from "./pages/RegisterStore.js";
 import Dashboard from "./pages/Dashboard.js";
 
 const ProtectedRoute = ({ children }) => {
-  const { token } = useAuth();
+  const {
+    token,
+    user,
+  } = useAuth();
 
   if (!token) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (!user?.tenant) {
+    return (
+      <Navigate
+        to="/register-store"
+        replace
+      />
+    );
+  }
+
+  return children;
+};
+
+const StoreSetupRoute = ({ children }) => {
+  const {
+    token,
+    user,
+  } = useAuth();
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.tenant) {
+    return (
+      <Navigate
+        to="/dashboard"
+        replace
+      />
+    );
   }
 
   return children;
 };
 
 const PublicRoute = ({ children }) => {
-  const { token } = useAuth();
+  const {
+    token,
+    user,
+  } = useAuth();
 
-  if (token) {
-    return <Navigate to="/dashboard" replace />;
+  if (!token) {
+    return children;
   }
 
-  return children;
+  if (!user?.tenant) {
+    return (
+      <Navigate
+        to="/register-store"
+        replace
+      />
+    );
+  }
+
+  return (
+    <Navigate
+      to="/dashboard"
+      replace
+    />
+  );
 };
 
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route
+        path="/"
+        element={<LandingPage />}
+      />
 
       <Route
         path="/login"
@@ -60,9 +117,9 @@ function AppRoutes() {
       <Route
         path="/register-store"
         element={
-          <ProtectedRoute>
+          <StoreSetupRoute>
             <RegisterStore />
-          </ProtectedRoute>
+          </StoreSetupRoute>
         }
       />
 
@@ -75,7 +132,15 @@ function AppRoutes() {
         }
       />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route
+        path="*"
+        element={
+          <Navigate
+            to="/"
+            replace
+          />
+        }
+      />
     </Routes>
   );
 }

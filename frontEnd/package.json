@@ -9,11 +9,12 @@
     "@testing-library/user-event": "latest",
     "msw": "latest",
     "jest": "latest",
-    "react-router-dom": "latest"
+    "react-router-dom": "latest",
+    "jwt-decode": "latest",
+    "tailwindcss": "latest"
   },
   "devDependencies": {
-    "tailwindcss": "^3.4.1",
-    "postcss": "^8.4.35",
-    "autoprefixer": "^10.4.17"
+    "postcss": "latest",
+    "autoprefixer": "latest"
   }
 }

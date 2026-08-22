@@ -1,45 +1,172 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { login as loginRequest } from "../services/authService.js";
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+
+import {
+  login as loginRequest,
+} from "../services/authService.js";
+
 import { useAuth } from "../context/AuthContext.js";
 
+import "./Auth.css";
+
 function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (event) => {
+    const { name, value } = event.target;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+    setForm((previousForm) => ({
+      ...previousForm,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
     setError("");
+    setLoading(true);
+
     try {
       const data = await loginRequest(form);
+
       login(data.user, data.token);
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err.message);
+
+      if (!data.user?.tenant) {
+        navigate("/register-store", {
+          replace: true,
+        });
+      } else {
+        navigate("/dashboard", {
+          replace: true,
+        });
+      }
+    } catch (error) {
+      setError(error.message || "Unable to log in");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md w-full max-w-md space-y-4">
-        <h1 className="text-2xl font-bold text-gray-800">Log in to TenantCart</h1>
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-        <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange}
-          className="w-full border rounded px-3 py-2" required />
-        <input name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange}
-          className="w-full border rounded px-3 py-2" required />
-        <button type="submit" className="w-full bg-indigo-600 text-white rounded py-2 hover:bg-indigo-700">
-          Log in
-        </button>
-        <p className="text-sm text-gray-500">
-          No account? <Link to="/register-account" className="text-indigo-600">Register</Link>
-        </p>
-      </form>
-    </div>
+    <main className="auth-page">
+      <Link to="/" className="auth-brand">
+        Tenant<span>Cart</span>
+      </Link>
+
+      <div className="auth-shell">
+        <section className="auth-introduction">
+          <p className="auth-eyebrow">Welcome back</p>
+
+          <h1>
+            Pick up
+            <br />
+            <em>where you left off.</em>
+          </h1>
+
+          <p>
+            Your store, products, orders, and business insights are waiting for
+            you.
+          </p>
+
+          <div className="login-highlights">
+            <div>
+              <span>01</span>
+              <p>Manage your products in one place.</p>
+            </div>
+
+            <div>
+              <span>02</span>
+              <p>Keep track of every customer order.</p>
+            </div>
+
+            <div>
+              <span>03</span>
+              <p>Make better decisions with store insights.</p>
+            </div>
+          </div>
+
+          <div className="auth-note">
+            <strong>A quiet place to work</strong>
+            TenantCart keeps the everyday parts of running your store simple.
+          </div>
+        </section>
+
+        <section className="auth-panel">
+          <div className="auth-panel-header">
+            <h2>Log in</h2>
+            <p>Enter your details to continue to your store.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="auth-form">
+            {error && (
+              <p className="auth-error">
+                {error}
+              </p>
+            )}
+
+            <label className="auth-field">
+              <span>Email address</span>
+
+              <input
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                className="auth-input"
+                placeholder="you@example.com"
+                autoComplete="email"
+                required
+              />
+            </label>
+
+            <label className="auth-field">
+              <span>Password</span>
+
+              <input
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={handleChange}
+                className="auth-input"
+                placeholder="Your password"
+                autoComplete="current-password"
+                required
+              />
+            </label>
+
+            <button
+              type="submit"
+              className="auth-submit"
+              disabled={loading}
+            >
+              {loading
+                ? "Logging in..."
+                : "Log in to TenantCart"}
+            </button>
+          </form>
+
+          <p className="auth-footer">
+            New to TenantCart?{" "}
+            <Link to="/register-account">
+              Create an account
+            </Link>
+          </p>
+        </section>
+      </div>
+    </main>
   );
 }
 

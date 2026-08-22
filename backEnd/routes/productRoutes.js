@@ -1,10 +1,12 @@
 import { Router } from "express";
+
 import {
   getProducts,
   createProduct,
   updateProduct,
   deleteProduct,
 } from "../controllers/productController.js";
+
 import { protect } from "../middlewares/authMiddleware.js";
 import { requireTenant } from "../middlewares/tenantMiddleware.js";
 
